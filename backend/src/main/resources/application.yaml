@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: digital-twin-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/digital_twin}
+    username: ${SPRING_DATASOURCE_USERNAME:digital_twin}
+    password: ${SPRING_DATASOURCE_PASSWORD:digital_twin}
+  flyway:
+    locations: classpath:db/migration
+
+auth:
+  jwt:
+    issuer: urban-digital-twin
+    secret: ${AUTH_JWT_SECRET}
+    ttl: PT60M
