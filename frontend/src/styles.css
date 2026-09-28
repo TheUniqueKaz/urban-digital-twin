@@ -8,9 +8,19 @@ body {
   margin: 0;
 }
 
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background: #fff;
+  border-bottom: 1px solid #d7e0e7;
+}
+
 main {
-  max-width: 28rem;
-  margin: 15vh auto;
+  max-width: 44rem;
+  margin: 8vh auto;
   padding: 2rem;
 }
 
@@ -28,6 +38,10 @@ button {
 
 button {
   cursor: pointer;
+}
+
+li {
+  margin-block: 0.75rem;
 }
 
 [role='alert'] {

@@ -46,7 +46,8 @@ export function AuthBoundary({ children }: { children: ReactNode }) {
         return;
       }
       setUser(currentUser);
-      goTo('/');
+      goTo('/customers');
+      window.dispatchEvent(new PopStateEvent('popstate'));
     } catch (loginError) {
       client.clearToken();
       setError(loginError instanceof Error ? loginError.message : 'Sign in failed.');
