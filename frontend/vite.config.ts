@@ -1,12 +1,13 @@
 import react from '@vitejs/plugin-react';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
+import cesium from 'vite-plugin-cesium';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', 'VITE_');
 
   return {
-    plugins: [react()],
+    plugins: [react(), cesium()],
     server: {
       port: 5173,
       proxy: {

@@ -7,12 +7,47 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { AuthBoundary, useAuth } from './auth/AuthBoundary';
 
+const scene = vi.hoisted(() => ({ add: vi.fn(), setView: vi.fn(), destroy: vi.fn() }));
+vi.mock('cesium', () => ({
+  Viewer: class {
+    entities = { add: scene.add };
+    camera = { setView: scene.setView };
+    destroy = scene.destroy;
+  },
+  Cartesian3: {
+    fromDegreesArray: (coordinates: number[]) => coordinates,
+    fromDegrees: (longitude: number, latitude: number) => [longitude, latitude],
+  },
+  Cartesian2: class {
+    constructor(public x: number, public y: number) {}
+  },
+  Rectangle: { fromDegrees: (...bounds: number[]) => bounds },
+  EllipsoidTerrainProvider: class {},
+  Color: {
+    CYAN: { withAlpha: () => 'transparent cyan' },
+    YELLOW: 'yellow',
+    WHITE: 'white',
+  },
+}));
+
+const boundary = {
+  type: 'Polygon',
+  coordinates: [[[106.695, 10.770], [106.705, 10.770], [106.705, 10.779], [106.695, 10.779], [106.695, 10.770]]],
+};
+const sensors = [{
+  id: 'sensor-a', digitalTwinId: 'twin-a', code: 'VS-01', name: 'North Gate', kind: 'VIRTUAL',
+  location: { longitude: 106.697, latitude: 10.777 }, capabilities: ['PM25', 'NO2'],
+}];
+
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  scene.add.mockClear();
+  scene.setView.mockClear();
+  scene.destroy.mockClear();
   window.localStorage.clear();
   window.history.replaceState(null, '', '/login');
   container = document.createElement('div');
@@ -130,8 +165,9 @@ describe('Issue #4 customer navigation', () => {
         return json([{ id: siteId, customerId, name: 'Innovation Campus', digitalTwin: { id: twinId, name: 'Innovation Campus Digital Twin' } }]);
       }
       if (input === `/api/customers/${customerId}/digital-twins/${twinId}`) {
-        return json({ id: twinId, siteId, name: 'Innovation Campus Digital Twin' });
+        return json({ id: twinId, siteId, name: 'Innovation Campus Digital Twin', boundary });
       }
+      if (input === `/api/customers/${customerId}/digital-twins/${twinId}/sensors`) return json(sensors);
       return new Response(null, { status: 404 });
     });
     vi.stubGlobal('fetch', fetcher);
@@ -186,6 +222,80 @@ describe('Issue #4 customer navigation', () => {
 
     expect(container.textContent).toContain('Digital Twin data is unavailable.');
     expect(container.textContent).not.toContain('secret customer data');
+  });
+});
+
+describe('Issue #5 Site and Virtual Sensors', () => {
+  async function openTwin(
+    role: 'ADMIN' | 'CUSTOMER',
+    siteBoundary: typeof boundary = boundary,
+  ) {
+    const customerId = 'customer-a';
+    const twinId = 'twin-a';
+    window.localStorage.setItem('digital-twin-access-token', 'signed.jwt');
+    window.history.replaceState(null, '', `/customers/${customerId}/digital-twins/${twinId}`);
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (input === '/api/me') return json({ id: 'user-a', email: 'user@example.com', role });
+      if (input === `/api/customers/${customerId}/digital-twins/${twinId}`) {
+        expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer signed.jwt');
+        return json({ id: twinId, siteId: 'site-a', name: 'Campus Digital Twin', boundary: siteBoundary });
+      }
+      if (input === `/api/customers/${customerId}/digital-twins/${twinId}/sensors`) {
+        expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer signed.jwt');
+        return json(sensors);
+      }
+      return new Response(null, { status: 404 });
+    });
+    vi.stubGlobal('fetch', fetcher);
+    await render(<App />);
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+    return fetcher;
+  }
+
+  it('renders the persisted boundary and labeled Sensor, focusing the camera on the boundary', async () => {
+    await openTwin('ADMIN');
+    expect(scene.add).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Site boundary', polygon: expect.anything(),
+    }));
+    expect(scene.add).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Site boundary outline', polyline: expect.anything(),
+    }));
+    expect(scene.add).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'North Gate', position: [106.697, 10.777], label: expect.objectContaining({ text: 'North Gate' }),
+    }));
+    expect(scene.setView).toHaveBeenCalledWith({ destination: expect.arrayContaining([
+      expect.closeTo(106.693), expect.closeTo(10.7682),
+      expect.closeTo(106.707), expect.closeTo(10.7808),
+    ]) });
+    expect(container.textContent).toContain('North Gate (VS-01) · PM25, NO2');
+  });
+
+  it('changes the Cesium camera focus when the backend Site boundary changes', async () => {
+    await openTwin('ADMIN', {
+      type: 'Polygon',
+      coordinates: [[[10, 20], [20, 20], [20, 30], [10, 30], [10, 20]]],
+    });
+
+    expect(scene.setView).toHaveBeenCalledWith({ destination: [8, 18, 22, 32] });
+  });
+
+  it('shows no simulation data without creating any, with an ADMIN-only action', async () => {
+    const fetcher = await openTwin('ADMIN');
+    expect(container.textContent).toContain('No simulation data is available.');
+    const action = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Generate Simulation');
+    expect(action?.disabled).toBe(true);
+    expect(fetcher.mock.calls.every(([, init]) => !init?.method || init.method === 'GET')).toBe(true);
+    expect(fetcher.mock.calls.map(([input]) => input)).toEqual([
+      '/api/me', '/api/customers/customer-a/digital-twins/twin-a',
+      '/api/customers/customer-a/digital-twins/twin-a/sensors',
+    ]);
+  });
+
+  it('keeps CUSTOMER read-only while showing the same empty scene', async () => {
+    await openTwin('CUSTOMER');
+    expect(container.textContent).toContain('No simulation data is available.');
+    expect(container.textContent).toContain('North Gate');
+    expect(container.textContent).not.toContain('Generate Simulation');
   });
 });
 

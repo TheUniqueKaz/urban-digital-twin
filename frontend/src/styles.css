@@ -19,9 +19,14 @@ header {
 }
 
 main {
-  max-width: 44rem;
+  max-width: 64rem;
   margin: 8vh auto;
   padding: 2rem;
+}
+
+.site-scene {
+  height: 30rem;
+  width: 100%;
 }
 
 form {
