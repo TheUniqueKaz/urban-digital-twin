@@ -38,6 +38,11 @@ const sensors = [{
   id: 'sensor-a', digitalTwinId: 'twin-a', code: 'VS-01', name: 'North Gate', kind: 'VIRTUAL',
   location: { longitude: 106.697, latitude: 10.777 }, capabilities: ['PM25', 'NO2'],
 }];
+const simulationRun = {
+  id: 'run-a', seed: 20260928, configuration: 'non-scientific-demo-rule-v1',
+  timeZone: 'Asia/Ho_Chi_Minh', startAt: '2026-09-28T01:00:00Z',
+  endAt: '2026-09-28T11:00:00Z', intervalMinutes: 15, createdAt: '2026-09-28T00:00:00Z',
+};
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -168,6 +173,9 @@ describe('Issue #4 customer navigation', () => {
         return json({ id: twinId, siteId, name: 'Innovation Campus Digital Twin', boundary });
       }
       if (input === `/api/customers/${customerId}/digital-twins/${twinId}/sensors`) return json(sensors);
+      if (input === `/api/customers/${customerId}/digital-twins/${twinId}/simulation-runs/latest`) {
+        return new Response(null, { status: 204 });
+      }
       return new Response(null, { status: 404 });
     });
     vi.stubGlobal('fetch', fetcher);
@@ -229,6 +237,7 @@ describe('Issue #5 Site and Virtual Sensors', () => {
   async function openTwin(
     role: 'ADMIN' | 'CUSTOMER',
     siteBoundary: typeof boundary = boundary,
+    generatedRun?: typeof simulationRun,
   ) {
     const customerId = 'customer-a';
     const twinId = 'twin-a';
@@ -243,6 +252,12 @@ describe('Issue #5 Site and Virtual Sensors', () => {
       if (input === `/api/customers/${customerId}/digital-twins/${twinId}/sensors`) {
         expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer signed.jwt');
         return json(sensors);
+      }
+      if (input === `/api/customers/${customerId}/digital-twins/${twinId}/simulation-runs/latest`) {
+        return new Response(null, { status: 204 });
+      }
+      if (input === `/api/customers/${customerId}/digital-twins/${twinId}/simulation-runs` && init?.method === 'POST') {
+        return generatedRun ? json(generatedRun, 201) : new Response(null, { status: 500 });
       }
       return new Response(null, { status: 404 });
     });
@@ -283,11 +298,12 @@ describe('Issue #5 Site and Virtual Sensors', () => {
     const fetcher = await openTwin('ADMIN');
     expect(container.textContent).toContain('No simulation data is available.');
     const action = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Generate Simulation');
-    expect(action?.disabled).toBe(true);
+    expect(action?.disabled).toBe(false);
     expect(fetcher.mock.calls.every(([, init]) => !init?.method || init.method === 'GET')).toBe(true);
     expect(fetcher.mock.calls.map(([input]) => input)).toEqual([
       '/api/me', '/api/customers/customer-a/digital-twins/twin-a',
       '/api/customers/customer-a/digital-twins/twin-a/sensors',
+      '/api/customers/customer-a/digital-twins/twin-a/simulation-runs/latest',
     ]);
   });
 
@@ -296,6 +312,24 @@ describe('Issue #5 Site and Virtual Sensors', () => {
     expect(container.textContent).toContain('No simulation data is available.');
     expect(container.textContent).toContain('North Gate');
     expect(container.textContent).not.toContain('Generate Simulation');
+  });
+
+  it('lets ADMIN synchronously generate and display the latest run metadata', async () => {
+    const fetcher = await openTwin('ADMIN', boundary, simulationRun);
+    await act(async () => {
+      [...container.querySelectorAll('button')].find((button) => button.textContent === 'Generate Simulation')!.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(fetcher).toHaveBeenCalledWith(
+      '/api/customers/customer-a/digital-twins/twin-a/simulation-runs',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(container.textContent).toContain('Latest Simulation Run');
+    expect(container.textContent).toContain('Non-scientific SIMULATED demo data');
+    expect(container.textContent).toContain('Seed: 20260928');
+    expect(container.textContent).toContain('Run ID: run-a');
+    expect(container.textContent).toContain('08:00 to 18:00 · 15-minute intervals (Asia/Ho_Chi_Minh)');
+    expect(container.textContent).not.toContain('No simulation data is available.');
   });
 });
 
