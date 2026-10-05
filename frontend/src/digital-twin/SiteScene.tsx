@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Cartesian2, Cartesian3, Color, EllipsoidTerrainProvider, Rectangle, Viewer } from 'cesium';
+import { Cartesian2, Cartesian3, Color, EllipsoidTerrainProvider, Rectangle, ScreenSpaceEventType, Viewer } from 'cesium';
+import type { ScreenSpaceEventHandler } from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 export type SiteBoundary = { type: 'Polygon'; coordinates: number[][][] };
@@ -13,8 +14,13 @@ export type Sensor = {
   capabilities: ('PM25' | 'PM10' | 'NO2' | 'CO2')[];
 };
 
-export function SiteScene({ boundary, sensors }: { boundary: SiteBoundary; sensors: Sensor[] }) {
+type SensorBadge = { sensorId: string; parameter: string; text: string; color: string };
+
+export function SiteScene({ boundary, sensors, badges, onSensorSelect }: {
+  boundary: SiteBoundary; sensors: Sensor[]; badges: SensorBadge[]; onSensorSelect: (id: string) => void;
+}) {
   const container = useRef<HTMLDivElement>(null);
+  const scene = useRef<Viewer | null>(null);
 
   useEffect(() => {
     if (!container.current) return;
@@ -27,7 +33,9 @@ export function SiteScene({ boundary, sensors }: { boundary: SiteBoundary; senso
       geocoder: false,
       homeButton: false,
       sceneModePicker: false,
+      infoBox: false,
     });
+    scene.current = viewer;
     const ring = boundary.coordinates[0];
     viewer.entities.add({
       name: 'Site boundary',
@@ -42,6 +50,7 @@ export function SiteScene({ boundary, sensors }: { boundary: SiteBoundary; senso
     });
     for (const sensor of sensors) {
       viewer.entities.add({
+        id: sensor.id,
         name: sensor.name,
         position: Cartesian3.fromDegrees(sensor.location.longitude, sensor.location.latitude),
         point: { pixelSize: 10, color: Color.YELLOW },
@@ -54,6 +63,11 @@ export function SiteScene({ boundary, sensors }: { boundary: SiteBoundary; senso
         },
       });
     }
+    viewer.screenSpaceEventHandler.setInputAction((event: ScreenSpaceEventHandler.PositionedEvent) => {
+      const entity = viewer.scene.pick(event.position)?.id;
+      const sensorId = typeof entity?.id === 'string' ? entity.id.split('/')[0] : undefined;
+      if (sensorId && sensors.some((sensor) => sensor.id === sensorId)) onSensorSelect(sensorId);
+    }, ScreenSpaceEventType.LEFT_CLICK);
     const longitudes = ring.map(([longitude]) => longitude);
     const latitudes = ring.map(([, latitude]) => latitude);
     const west = Math.min(...longitudes);
@@ -68,8 +82,36 @@ export function SiteScene({ boundary, sensors }: { boundary: SiteBoundary; senso
         east + longitudeMargin, north + latitudeMargin,
       ),
     });
-    return () => viewer.destroy();
-  }, [boundary, sensors]);
+    return () => {
+      scene.current = null;
+      viewer.destroy();
+    };
+  }, [boundary, sensors, onSensorSelect]);
+
+  useEffect(() => {
+    const viewer = scene.current;
+    if (!viewer) return;
+    const ids: string[] = [];
+    for (const sensor of sensors) {
+      badges.filter((badge) => badge.sensorId === sensor.id).forEach((badge, index) => {
+        const id = `${sensor.id}/${badge.parameter}`;
+        ids.push(id);
+        viewer.entities.add({
+          id, name: sensor.name,
+          position: Cartesian3.fromDegrees(sensor.location.longitude, sensor.location.latitude),
+          label: {
+            text: badge.text, font: '14px sans-serif', fillColor: Color.WHITE,
+            showBackground: true, backgroundColor: Color.fromCssColorString(badge.color),
+            pixelOffset: new Cartesian2(0, -46 - index * 28),
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        });
+      });
+    }
+    return () => {
+      if (!viewer.isDestroyed()) for (const id of ids) viewer.entities.removeById(id);
+    };
+  }, [boundary, sensors, badges, onSensorSelect]);
 
   return <div ref={container} className="site-scene" aria-label="Site boundary and Virtual Sensors" />;
 }

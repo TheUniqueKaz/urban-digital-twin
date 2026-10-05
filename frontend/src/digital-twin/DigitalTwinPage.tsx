@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthBoundary';
 import type { Navigate } from '../shared/navigation';
 import { SimulationPanel } from '../simulation/SimulationPanel';
-import { SiteScene, type Sensor, type SiteBoundary } from './SiteScene';
+import type { Sensor, SiteBoundary } from './SiteScene';
 
 type DigitalTwin = { id: string; siteId: string; name: string; boundary: SiteBoundary };
 
@@ -48,12 +48,8 @@ export function DigitalTwinPage({ customerId, twinId, navigate }: {
       {error && <p role="alert">{error}</p>}
       {digitalTwin && <>
         <p>Site: {digitalTwin.siteId}</p>
-        <SiteScene boundary={digitalTwin.boundary} sensors={sensors} />
-        <h2>Virtual Sensors</h2>
-        <ul>{sensors.map((sensor) => <li key={sensor.id}>
-          {sensor.name} ({sensor.code}) · {sensor.capabilities.join(', ')}
-        </li>)}</ul>
-        <SimulationPanel customerId={customerId} twinId={twinId} />
+        <SimulationPanel key={`${customerId}/${twinId}`} customerId={customerId} twinId={twinId}
+          boundary={digitalTwin.boundary} sensors={sensors} />
       </>}
     </main>
   );

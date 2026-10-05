@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../auth/AuthBoundary';
+import type { Sensor, SiteBoundary } from '../digital-twin/SiteScene';
+import { ObservationExplorer } from './ObservationExplorer';
+import { formatTime, type Measurement } from './observations';
 
 type SimulationRun = {
   id: string;
@@ -13,12 +16,16 @@ type SimulationRun = {
   createdAt: string;
 };
 
-export function SimulationPanel({ customerId, twinId }: { customerId: string; twinId: string }) {
+export function SimulationPanel({ customerId, twinId, boundary, sensors }: {
+  customerId: string; twinId: string; boundary: SiteBoundary; sensors: Sensor[];
+}) {
   const { authenticatedFetch, user } = useAuth();
   const [run, setRun] = useState<SimulationRun | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [dataset, setDataset] = useState<{ runId: string; measurements: Measurement[] } | null>(null);
+  const [measurementError, setMeasurementError] = useState('');
   const runsUrl = `/api/customers/${customerId}/digital-twins/${twinId}/simulation-runs`;
 
   useEffect(() => {
@@ -40,6 +47,25 @@ export function SimulationPanel({ customerId, twinId }: { customerId: string; tw
       });
     return () => { active = false; };
   }, [authenticatedFetch, runsUrl]);
+
+  useEffect(() => {
+    let active = true;
+    setDataset(null);
+    setMeasurementError('');
+    if (run) {
+      authenticatedFetch(`${runsUrl}/${run.id}/measurements`)
+        .then(async (response) => {
+          if (!response.ok) throw new Error('Simulation observations are unavailable.');
+          const measurements = await response.json() as Measurement[];
+          if (active) setDataset({ runId: run.id, measurements: measurements.filter((row) =>
+            row.simulationRunId === run.id && row.provenance === 'SIMULATED') });
+        })
+        .catch((reason: unknown) => {
+          if (active) setMeasurementError(reason instanceof Error ? reason.message : 'Simulation observations are unavailable.');
+        });
+    }
+    return () => { active = false; };
+  }, [authenticatedFetch, runsUrl, run]);
 
   async function generate() {
     setGenerating(true);
@@ -69,10 +95,10 @@ export function SimulationPanel({ customerId, twinId }: { customerId: string; tw
     {user.role === 'ADMIN' && <button type="button" disabled={generating} onClick={() => void generate()}>
       {generating ? 'Generating…' : 'Generate Simulation'}
     </button>}
+    {measurementError && <p role="alert">{measurementError}</p>}
+    {run && !dataset && !measurementError && <p role="status">Loading Simulation Run observations…</p>}
+    {run && dataset?.runId === run.id && dataset.measurements.length === 0 && <p>No observations are available for this Simulation Run.</p>}
+    <ObservationExplorer boundary={boundary} sensors={sensors} timeZone={run?.timeZone}
+      measurements={dataset?.runId === run?.id ? dataset?.measurements ?? [] : []} />
   </>;
-}
-
-function formatTime(value: string, timeZone: string) {
-  return new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', minute: '2-digit' })
-    .format(new Date(value));
 }
