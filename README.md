@@ -55,7 +55,7 @@ The backend integration suite uses that PostgreSQL/PostGIS service and applies t
 ## Fixed constraints
 
 - Backend: Java and Spring Boot
-- Frontend: React, TypeScript, Vite, and CesiumJS
+- Frontend target: React, TypeScript, Vite, React Three Fiber, and Three.js as the single Site renderer ([ADR 0005](./docs/adr/0005-site-local-stylized-visualization.md)). The current `SiteScene` still uses Cesium pending Issue #8; source and dependencies are unchanged by this documentation decision.
 - Database: PostgreSQL with PostGIS
 - Architecture: modular monolith
 - Authentication: Spring Security with JWT

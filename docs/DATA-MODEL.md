@@ -57,11 +57,12 @@ site_id         FK sites, unique
 name
 description
 type            AIR_QUALITY
-building_source CESIUM_OSM_BUILDINGS
 created_at
 ```
 
 The unique `site_id` implements the agreed one-to-one Site–Digital Twin relationship. `customer_id` is not duplicated; ownership is resolved through Site.
+
+[ADR 0005](./adr/0005-site-local-stylized-visualization.md) supersedes the planned Cesium building-source decision. The removed `building_source` field existed only in design documentation, not the implemented backend/schema, so no migration is required. Curated geographic environment assets are frontend presentation context, not persisted building/domain data. PostGIS SRID 4326 Site/Sensor geometry remains authoritative; local scene coordinates are never stored. Flat-ground rendering and visual heights do not introduce authoritative elevation or change existing Sensor fields.
 
 ### sensors
 

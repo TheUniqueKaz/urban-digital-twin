@@ -74,7 +74,7 @@ GET requests allow ADMIN or an authorized CUSTOMER. POST requires ADMIN. The POS
 /customers/:customerId/digital-twins/:twinId
 ```
 
-The Customer page lists its Site and Digital Twin. The twin page contains Cesium, layer/parameter controls, legend, sensor/building popups, timeline, provenance labeling, and the ADMIN-only Generate Simulation action.
+The Customer page lists its Site and Digital Twin. The twin page contains the Site-centered R3F/Three.js scene, layer/parameter controls, legend, Sensor observations and environment context, timeline, provenance labeling, and the ADMIN-only Generate Simulation action. [ADR 0005](./adr/0005-site-local-stylized-visualization.md) replaces the rendering target only; existing authorization, scoped APIs, and simulation/no-run behavior remain unchanged, with no backend/schema/API change required.
 
 A standalone dashboard is explicitly deferred. Reconsider `/dashboard` when the product has cross-customer summaries, alerts, multiple twins needing an overview, or another concrete dashboard use case.
 

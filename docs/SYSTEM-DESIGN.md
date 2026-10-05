@@ -4,7 +4,7 @@
 
 The product is a synthetic urban air-quality monitoring demo. A Digital Twin is the time-aware digital representation of exactly one physical Site. It is not a file, a Cesium scene, a Project, or an environmental service.
 
-The first demo uses a campus-sized Site of about 1 km². Its Digital Twin combines an externally streamed 3D building layer with customer-owned Site geometry, virtual sensors, simulated measurements, and a timeline.
+The first demo uses a campus-sized Site of about 1 km². Its Digital Twin combines source-backed geographic road/building layout and stylized 3D presentation with customer-owned Site geometry, virtual sensors, simulated measurements, and a timeline. [ADR 0005](./adr/0005-site-local-stylized-visualization.md) defines the accepted rendering target; the existing Cesium implementation inside `SiteScene` remains until Issue #8 replaces it.
 
 ## Domain relationships
 
@@ -26,9 +26,9 @@ There is deliberately no Organization or Project entity. `Customer` is both the 
 
 ```text
 Browser
-  React + TypeScript + CesiumJS
+  React + TypeScript + React Three Fiber / Three.js
        │
-       ├── streams Cesium OSM Buildings from Cesium ion
+       ├── loads curated geographic snapshot + reusable visual assets
        │
        └── HTTPS/JSON + JWT
                     │
@@ -45,13 +45,19 @@ PostgreSQL + PostGIS
 
 The frontend:
 
-- renders the globe, Cesium OSM Buildings, Site boundary, virtual sensors, labels, legends, popups, and timeline;
+- renders a Site-centered stylized scene, source-backed footprints/main roads where available, Site boundary, virtual sensors, labels, legends, contextual information, and timeline;
 - loads an entire Simulation Run and selects the current timestamp locally;
 - lets users toggle multiple parameters, showing one stacked badge per selected parameter at each sensor;
-- displays available Cesium feature metadata and explicitly shows missing fields as unavailable;
+- supports environment hover, selection, highlighting, and contextual information, distinguishing source-backed layout, approximate dimensions, illustrative assets, and unavailable metadata;
 - never decides ownership, authorization, provenance, or official simulation results.
 
-Building metadata is read directly from the streamed Cesium feature when available. It is not persisted or treated as customer data.
+Environment metadata comes from the curated source/asset snapshot. It is not persisted as backend buildings or treated as customer-owned domain data. Optional environment failure leaves Site/Sensor observation exploration usable. Sensor selection, stacked badges, legends, canonical units, visible `SIMULATED` provenance, and no-run behavior from Issues #2–#7 remain intact.
+
+### Rendering coordinate frame
+
+PostGIS SRID 4326 remains authoritative. Convert WGS84 longitude/latitude → ECEF → one Site-local ENU frame → Three.js, with `x = East`, `y = Up`, `z = -North`, and one unit equal to one metre. Derive a deterministic origin from the Site boundary's bounding extent and use it for boundary rings, Sensors, footprint vertices, and road geometry. Local coordinates are transient presentation data and must never be persisted or become backend/domain truth.
+
+Flat ground at `y = 0` is acceptable; discard curvature-related Up displacement. Zero conversion height, building extrusion, road-width assumptions, and marker offsets do not introduce authoritative elevation. Preserve horizontal position, orientation, and scale; identify approximations.
 
 ### Backend boundary
 
@@ -64,7 +70,7 @@ Spring Boot:
 - generates deterministic, rule-based simulated time series;
 - returns customer-scoped domain data through REST APIs.
 
-The backend does not proxy Cesium OSM Buildings.
+The backend does not proxy visual-context providers or persist environment assets, building geometry, or building metadata. The renderer replacement requires no backend, schema, or API change.
 
 ### Database boundary
 
@@ -73,13 +79,17 @@ PostgreSQL stores relational domain data and time-series rows. PostGIS stores:
 - `site.boundary` as Polygon with SRID 4326;
 - `sensor.location` as Point with SRID 4326.
 
-The MVP does not store building geometry, 3D Tiles, terrain, or Cesium assets. It does not require TimescaleDB.
+The MVP does not store building geometry, local scene coordinates, 3D Tiles, terrain, or environment assets in the database. It does not require TimescaleDB.
 
-## Building strategy
+## Visual context and scene growth
 
-Cesium OSM Buildings is an external visual base layer streamed directly by CesiumJS. The application persists the twin identity, Site boundary, sensors, measurements, simulation runs, and the fact that the base layer is `CESIUM_OSM_BUILDINGS`. The initial camera view is derived from the Site boundary.
+Use one bounded geographic snapshot for an existing seeded Site, with documented source, retrieval date, coverage, attribution/licensing, and limitations. Render stylized buildings from source-backed footprints and main-road layout where available. Use a small reusable visual asset set and instancing for repeated decorations. Frontend/source keys support picking without becoming backend building IDs. No runtime GIS provider queries are required. Derive camera framing from the authoritative Site boundary; support pan, zoom, constrained orbit, and reset.
 
-This does not create an immutable snapshot of buildings. If durable building geometry or backend spatial queries become necessary, a later pipeline must acquire source OpenStreetMap data independently, normalize it, and store it in PostGIS. Tiles streamed from Cesium are not cached into the application database.
+The curated visual input does not create a Digital Twin version or authoritative backend building snapshot. Building persistence and backend spatial building queries remain deferred and require a separate decision. The obsolete planned `building_source` field was not implemented; removing it from the design implies no migration.
+
+Keep environment geometry mounted across observation updates. Share materials/geometry and group instance batches spatially. Add selective LOD and bounded chunk loading when measured growth justifies them, without generic streaming or tile-generation infrastructure. The scope may grow to a campus or nearby district spanning a few kilometres; continuous city/region navigation, terrain, and final district-scale completeness remain deferred.
+
+Target 60 FPS during normal camera movement at 1080p in normal quality on documented reference hardware and a repeatable representative workload. If normal quality is below 60 FPS, profile and document the bottleneck; small hardware-dependent variance alone does not fail the ticket. Reduced quality must meet at least 30 FPS for that recorded workload. The 1,000 repeated decorative instances case is a benchmark for instancing/performance, not a production object-count requirement. Record quality settings and results using Issue #8's procedure.
 
 ## Air-quality observation
 
@@ -129,8 +139,8 @@ simulation
 shared
 ```
 
-Cesium viewer, layer controls, timeline, sensor badges, legends, and building popup belong to `digital-twin`. `shared` contains only genuinely reusable components or utilities.
+`SiteScene`, layer controls, timeline, sensor badges, legends, and environment context belong to `digital-twin`. Preserve the existing observation and simulation behavior and feature organization. `shared` contains only genuinely reusable components or utilities.
 
-## Cesium credentials
+## Rendering migration
 
-CesiumJS uses a public, scoped Cesium ion client token supplied through frontend environment configuration. The token is not committed to Git and should be restricted by asset/domain where supported. An administrative Cesium token must never be exposed to the browser.
+Issue #8 replaces only the Cesium rendering implementation and its renderer-specific integration. The accepted target requires no Cesium ion token. Source, installed dependencies, and build configuration remain unchanged until implementation; Cesium removal follows replacement verification. Do not implement a second renderer, backend building model, or new simulation behavior.
