@@ -1,0 +1,172 @@
+{
+  "browser": "154.0.4258.53",
+  "renderer": {
+    "renderer": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001638) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (AMD)",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0"
+  },
+  "coldLoadMs": 2520,
+  "runs": [
+    {
+      "quality": "normal",
+      "durationSeconds": 60.00369999998807,
+      "frames": 4250,
+      "medianFps": 74.07407407407408,
+      "p95FrameMs": 21.099999994039536,
+      "stallsOver50Ms": 2,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 55.900000005960464,
+      "below30FpsFrames": 10,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "normal",
+      "durationSeconds": 60.002099999994044,
+      "frames": 4667,
+      "medianFps": 80,
+      "p95FrameMs": 17.200000017881393,
+      "stallsOver50Ms": 0,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 39.60000002384186,
+      "below30FpsFrames": 1,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "normal",
+      "durationSeconds": 60.00959999999404,
+      "frames": 4691,
+      "medianFps": 80,
+      "p95FrameMs": 17,
+      "stallsOver50Ms": 0,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 29.899999976158142,
+      "below30FpsFrames": 0,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.005300000011914,
+      "frames": 7270,
+      "medianFps": 133.33333333333334,
+      "p95FrameMs": 12.100000023841858,
+      "stallsOver50Ms": 0,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 28.69999998807907,
+      "below30FpsFrames": 0,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.002300000011914,
+      "frames": 7100,
+      "medianFps": 138.8888885439546,
+      "p95FrameMs": 13.900000005960464,
+      "stallsOver50Ms": 7,
+      "stallsOver100Ms": 1,
+      "worstFrameMs": 147.90000000596046,
+      "below30FpsFrames": 23,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.01049999999999,
+      "frames": 4386,
+      "medianFps": 79.36507940262324,
+      "p95FrameMs": 26.80000001192093,
+      "stallsOver50Ms": 7,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 82.40000000596046,
+      "below30FpsFrames": 89,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    }
+  ],
+  "idleFrames": 0,
+  "navigation": [
+    {
+      "geometries": 18,
+      "textures": 1,
+      "canvases": 1
+    },
+    {
+      "geometries": 18,
+      "textures": 1,
+      "canvases": 1
+    },
+    {
+      "geometries": 18,
+      "textures": 1,
+      "canvases": 1
+    }
+  ],
+  "geographicRequests": [
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    },
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    },
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    },
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    },
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    }
+  ],
+  "workloadNote": "Initial diagnostic collector did not assert the badge count after re-navigation; these runs are not the accepted full-badge benchmark."
+}

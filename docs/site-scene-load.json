@@ -1,0 +1,9 @@
+{
+  "sceneLoadMs": 412,
+  "description": "Development scene mount after login; cached application modules, new geographic fetch",
+  "geometry": {
+    "missingBuildings": 0,
+    "missingRoads": 0,
+    "boundaryMatches": true
+  }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../auth/AuthBoundary';
-import type { Sensor, SiteBoundary } from '../digital-twin/SiteScene';
+import type { Sensor, SiteBoundary } from '../digital-twin/geography';
 import { ObservationExplorer } from './ObservationExplorer';
 import { formatTime, type Measurement } from './observations';
 

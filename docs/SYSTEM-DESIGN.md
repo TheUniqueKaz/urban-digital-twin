@@ -4,7 +4,7 @@
 
 The product is a synthetic urban air-quality monitoring demo. A Digital Twin is the time-aware digital representation of exactly one physical Site. It is not a file, a Cesium scene, a Project, or an environmental service.
 
-The first demo uses a campus-sized Site of about 1 km². Its Digital Twin combines source-backed geographic road/building layout and stylized 3D presentation with customer-owned Site geometry, virtual sensors, simulated measurements, and a timeline. [ADR 0005](./adr/0005-site-local-stylized-visualization.md) defines the accepted rendering target; the existing Cesium implementation inside `SiteScene` remains until Issue #8 replaces it.
+The first demo uses a campus-sized Site of about 1 km². Its Digital Twin combines source-backed geographic road/building layout and stylized 3D presentation with customer-owned Site geometry, virtual sensors, simulated measurements, and a timeline. `SiteScene` implements the R3F/Three.js architecture in [ADR 0005](./adr/0005-site-local-stylized-visualization.md). The [curated snapshot](./site-scene-snapshot.md) documents source coverage and presentation limits.
 
 ## Domain relationships
 
@@ -143,4 +143,4 @@ shared
 
 ## Rendering migration
 
-Issue #8 replaces only the Cesium rendering implementation and its renderer-specific integration. The accepted target requires no Cesium ion token. Source, installed dependencies, and build configuration remain unchanged until implementation; Cesium removal follows replacement verification. Do not implement a second renderer, backend building model, or new simulation behavior.
+Issue #8 replaces only the Site rendering implementation and its renderer-specific integration. Replacement verification precedes removal of the Cesium dependencies/styles/build plugin. See [verification and performance](./site-scene-verification.md). There is one Site renderer and no backend building model or new simulation behavior.

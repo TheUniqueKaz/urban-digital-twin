@@ -1,0 +1,144 @@
+{
+  "note": "Six complete verified 12-badge movement runs, transcribed from collector stdout. Subsequent navigation cleanup probe readiness check raced and failed before saving metadata; final collector repeats and validates the whole process. Cold-load timing for these runs is unavailable.",
+  "badgeCount": 12,
+  "runs": [
+    {
+      "quality": "normal",
+      "durationSeconds": 60.00440000000596,
+      "frames": 4494,
+      "medianFps": 78.7401573694501,
+      "p95FrameMs": 19.799999982118607,
+      "stallsOver50Ms": 0,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 33.80000001192093,
+      "below30FpsFrames": 2,
+      "longestDipFrames": 1,
+      "longestDipMs": 33.80000001192093,
+      "minOneSecondFps": 52,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "normal",
+      "durationSeconds": 60.0055,
+      "frames": 4606,
+      "medianFps": 80,
+      "p95FrameMs": 18.599999994039536,
+      "stallsOver50Ms": 1,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 83,
+      "below30FpsFrames": 4,
+      "longestDipFrames": 1,
+      "longestDipMs": 83,
+      "minOneSecondFps": 61,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "normal",
+      "durationSeconds": 60.017900000005966,
+      "frames": 4412,
+      "medianFps": 80,
+      "p95FrameMs": 20.900000005960464,
+      "stallsOver50Ms": 2,
+      "stallsOver100Ms": 1,
+      "worstFrameMs": 219.90000000596046,
+      "below30FpsFrames": 8,
+      "longestDipFrames": 1,
+      "longestDipMs": 219.90000000596046,
+      "minOneSecondFps": 45,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.005300000011914,
+      "frames": 7658,
+      "medianFps": 142.85714285714286,
+      "p95FrameMs": 11.900000005960464,
+      "stallsOver50Ms": 0,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 28.30000001192093,
+      "below30FpsFrames": 0,
+      "longestDipFrames": 0,
+      "longestDipMs": 0,
+      "minOneSecondFps": 78,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.001800000011926,
+      "frames": 7598,
+      "medianFps": 140.84507054077494,
+      "p95FrameMs": 12.100000023841858,
+      "stallsOver50Ms": 0,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 24.900000005960464,
+      "below30FpsFrames": 0,
+      "longestDipFrames": 0,
+      "longestDipMs": 0,
+      "minOneSecondFps": 95,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.003700000017886,
+      "frames": 7793,
+      "medianFps": 142.85714285714286,
+      "p95FrameMs": 11.600000023841858,
+      "stallsOver50Ms": 0,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 30.700000017881393,
+      "below30FpsFrames": 0,
+      "longestDipFrames": 0,
+      "longestDipMs": 0,
+      "minOneSecondFps": 97,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    }
+  ]
+}

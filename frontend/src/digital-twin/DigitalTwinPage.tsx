@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthBoundary';
 import type { Navigate } from '../shared/navigation';
 import { SimulationPanel } from '../simulation/SimulationPanel';
-import type { Sensor, SiteBoundary } from './SiteScene';
+import type { Sensor, SiteBoundary } from './geography';
 
 type DigitalTwin = { id: string; siteId: string; name: string; boundary: SiteBoundary };
 

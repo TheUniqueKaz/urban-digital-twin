@@ -1,0 +1,190 @@
+{
+  "browser": "154.0.4258.53",
+  "renderer": {
+    "renderer": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001638) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (AMD)",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0"
+  },
+  "coldLoadMs": 2546,
+  "runs": [
+    {
+      "quality": "normal",
+      "durationSeconds": 60.00040000000595,
+      "frames": 4365,
+      "medianFps": 76.33587789732803,
+      "p95FrameMs": 20.200000017881393,
+      "stallsOver50Ms": 2,
+      "stallsOver100Ms": 1,
+      "worstFrameMs": 104.5,
+      "below30FpsFrames": 7,
+      "longestDipFrames": 1,
+      "longestDipMs": 104.5,
+      "minOneSecondFps": 45,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "normal",
+      "durationSeconds": 60.01159999999403,
+      "frames": 4170,
+      "medianFps": 71.9424460123158,
+      "p95FrameMs": 20.5,
+      "stallsOver50Ms": 1,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 52.60000002384186,
+      "below30FpsFrames": 3,
+      "longestDipFrames": 1,
+      "longestDipMs": 52.60000002384186,
+      "minOneSecondFps": 51,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "normal",
+      "durationSeconds": 60.01469999998808,
+      "frames": 3924,
+      "medianFps": 69.93006987177402,
+      "p95FrameMs": 23.5,
+      "stallsOver50Ms": 1,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 57.5,
+      "below30FpsFrames": 12,
+      "longestDipFrames": 1,
+      "longestDipMs": 57.5,
+      "minOneSecondFps": 41,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1.5,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.00449999999999,
+      "frames": 7640,
+      "medianFps": 140.84507054077494,
+      "p95FrameMs": 12,
+      "stallsOver50Ms": 1,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 61.70000001788139,
+      "below30FpsFrames": 2,
+      "longestDipFrames": 1,
+      "longestDipMs": 61.70000001788139,
+      "minOneSecondFps": 85,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.00709999999404,
+      "frames": 7474,
+      "medianFps": 140.84507054077494,
+      "p95FrameMs": 12.799999982118607,
+      "stallsOver50Ms": 0,
+      "stallsOver100Ms": 0,
+      "worstFrameMs": 37.599999994039536,
+      "below30FpsFrames": 2,
+      "longestDipFrames": 1,
+      "longestDipMs": 37.599999994039536,
+      "minOneSecondFps": 79,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "quality": "reduced",
+      "durationSeconds": 60.00790000000596,
+      "frames": 7118,
+      "medianFps": 140.84507054077494,
+      "p95FrameMs": 14.199999988079071,
+      "stallsOver50Ms": 2,
+      "stallsOver100Ms": 2,
+      "worstFrameMs": 234.40000000596046,
+      "below30FpsFrames": 11,
+      "longestDipFrames": 1,
+      "longestDipMs": 234.40000000596046,
+      "minOneSecondFps": 39,
+      "drawCalls": 24,
+      "triangles": 48400,
+      "geometries": 18,
+      "textures": 1,
+      "pixelRatio": 1,
+      "viewport": [
+        1920,
+        1080
+      ]
+    }
+  ],
+  "badgeCount": 12,
+  "idleFrames": 0,
+  "navigation": [
+    {
+      "geometries": 18,
+      "textures": 1,
+      "canvases": 1
+    },
+    {
+      "geometries": 18,
+      "textures": 1,
+      "canvases": 1
+    },
+    {
+      "geometries": 18,
+      "textures": 1,
+      "canvases": 1
+    }
+  ],
+  "geographicRequests": [
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    },
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    },
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    },
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    },
+    {
+      "url": "http://127.0.0.1:5175/geography/innovation-campus.json",
+      "bytes": 140546
+    }
+  ]
+}

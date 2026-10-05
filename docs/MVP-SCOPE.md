@@ -19,7 +19,7 @@ MVP means Minimum Viable Product: the smallest end-to-end version that demonstra
 
 - Spring Boot modular monolith
 - PostgreSQL and PostGIS
-- React, TypeScript, Vite, React Three Fiber, and Three.js as the accepted target; migration of the existing Cesium `SiteScene` is Issue #8
+- React, TypeScript, Vite, React Three Fiber, and Three.js as the single Site renderer, implemented in Issue #8
 - Spring Security login and JWT access token
 - Global ADMIN and read-only CUSTOMER roles
 - Customer Membership authorization

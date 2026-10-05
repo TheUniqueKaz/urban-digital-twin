@@ -7,64 +7,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { AuthBoundary, useAuth } from './auth/AuthBoundary';
 
-const scene = vi.hoisted(() => ({ add: vi.fn(), setView: vi.fn(), destroy: vi.fn() }));
-vi.mock('cesium', () => ({
-  Viewer: class {
-    private elements = new Map<string, HTMLElement>();
-    private groups = new Map<string, HTMLElement>();
-    private select?: (event: { position: string }) => void;
-    private destroyed = false;
-    constructor(private container: HTMLElement) {}
-    private entityCollection = {
-      add: (entity: { id?: string; name: string; label?: { text: string; backgroundColor?: string } }) => {
-        scene.add(entity);
-        if (!entity.id || !entity.label) return;
-        const sensorId = entity.id.split('/')[0];
-        let group = this.groups.get(sensorId);
-        if (!group) {
-          group = document.createElement('div');
-          group.setAttribute('role', 'group');
-          group.setAttribute('aria-label', `${entity.name} map Sensor`);
-          this.container.append(group);
-          this.groups.set(sensorId, group);
-        }
-        const label = document.createElement(entity.id.includes('/') ? 'span' : 'button');
-        label.textContent = entity.label.text;
-        label.style.display = 'block';
-        if (entity.label.backgroundColor) label.style.backgroundColor = entity.label.backgroundColor;
-        label.onclick = () => this.select?.({ position: entity.id! });
-        group.append(label);
-        this.elements.set(entity.id, label);
-      },
-      removeById: (id: string) => { this.elements.get(id)?.remove(); this.elements.delete(id); },
-    };
-    get entities() {
-      if (this.destroyed) throw new Error('Viewer is destroyed');
-      return this.entityCollection;
-    }
-    scene = { pick: (position: string) => ({ id: { id: position } }) };
-    screenSpaceEventHandler = { setInputAction: (listener: (event: { position: string }) => void) => { this.select = listener; } };
-    camera = { setView: scene.setView };
-    isDestroyed = () => this.destroyed;
-    destroy = () => { this.destroyed = true; this.container.replaceChildren(); scene.destroy(); };
-  },
-  Cartesian3: {
-    fromDegreesArray: (coordinates: number[]) => coordinates,
-    fromDegrees: (longitude: number, latitude: number) => [longitude, latitude],
-  },
-  Cartesian2: class {
-    constructor(public x: number, public y: number) {}
-  },
-  Rectangle: { fromDegrees: (...bounds: number[]) => bounds },
-  ScreenSpaceEventType: { LEFT_CLICK: 'click' },
-  EllipsoidTerrainProvider: class {},
-  Color: {
-    CYAN: { withAlpha: () => 'transparent cyan' },
-    YELLOW: 'yellow',
-    WHITE: 'white',
-    fromCssColorString: (color: string) => color,
-  },
+const scene = vi.hoisted(() => ({ props: vi.fn() }));
+vi.mock('@react-three/fiber', () => ({ Canvas: () => <div /> }));
+vi.mock('./digital-twin/environment', async (importOriginal) => ({
+  ...await importOriginal<typeof import('./digital-twin/environment')>(),
+  loadEnvironment: async () => ({ source: 'OpenStreetMap', retrievedAt: '2026-10-05',
+    coverage: [-180, -90, 180, 90], attribution: '© OpenStreetMap contributors', license: 'ODbL 1.0', buildings: [], roads: [] }),
 }));
+vi.mock('./digital-twin/SiteScene', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./digital-twin/SiteScene')>();
+  return { ...actual, SiteScene: (props: React.ComponentProps<typeof actual.SiteScene>) => {
+    scene.props(props);
+    return <actual.SiteScene {...props} />;
+  } };
+});
 
 const boundary = {
   type: 'Polygon',
@@ -86,9 +42,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-  scene.add.mockClear();
-  scene.setView.mockClear();
-  scene.destroy.mockClear();
+  scene.props.mockClear();
   window.localStorage.clear();
   window.history.replaceState(null, '', '/login');
   container = document.createElement('div');
@@ -303,31 +257,16 @@ describe('Issue #5 Site and Virtual Sensors', () => {
     return fetcher;
   }
 
-  it('renders the persisted boundary and labeled Sensor, focusing the camera on the boundary', async () => {
+  it('passes the authorized API boundary and Sensor coordinates to the scene unchanged', async () => {
     await openTwin('ADMIN');
-    expect(scene.add).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'Site boundary', polygon: expect.anything(),
-    }));
-    expect(scene.add).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'Site boundary outline', polyline: expect.anything(),
-    }));
-    expect(scene.add).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'North Gate', position: [106.697, 10.777], label: expect.objectContaining({ text: 'North Gate' }),
-    }));
-    expect(scene.setView).toHaveBeenCalledWith({ destination: expect.arrayContaining([
-      expect.closeTo(106.693), expect.closeTo(10.7682),
-      expect.closeTo(106.707), expect.closeTo(10.7808),
-    ]) });
+    expect(scene.props).toHaveBeenLastCalledWith(expect.objectContaining({ boundary, sensors }));
     expect(container.textContent).toContain('North Gate (VS-01) · PM25, NO2');
   });
 
-  it('changes the Cesium camera focus when the backend Site boundary changes', async () => {
-    await openTwin('ADMIN', {
-      type: 'Polygon',
-      coordinates: [[[10, 20], [20, 20], [20, 30], [10, 30], [10, 20]]],
-    });
-
-    expect(scene.setView).toHaveBeenCalledWith({ destination: [8, 18, 22, 32] });
+  it('passes a changed backend Site boundary to the scene', async () => {
+    const changed = { type: 'Polygon', coordinates: [[[10, 20], [20, 20], [20, 30], [10, 30], [10, 20]]] };
+    await openTwin('ADMIN', changed);
+    expect(scene.props).toHaveBeenLastCalledWith(expect.objectContaining({ boundary: changed }));
   });
 
   it('shows no simulation data without creating any, with an ADMIN-only action', async () => {
@@ -511,14 +450,14 @@ describe('Issue #7 observation exploration', () => {
   it('renders multiple selected observations as separate stacked badges with units and provenance', async () => {
     await openObservations();
     parameterNames.slice(1).forEach(toggle);
-    const badges = [...mapSensor().querySelectorAll('span')];
+    const badges = [...mapSensor().querySelectorAll<HTMLElement>('.map-badge')];
     expect(badges.map((badge) => badge.textContent)).toEqual([
       'PM2.5: 12 µg/m³ · SIMULATED', 'PM10: 25 µg/m³ · SIMULATED',
       'NO2: 10 µg/m³ · SIMULATED', 'CO2: 430 ppm · SIMULATED',
     ]);
     expect([...container.querySelectorAll('[aria-label="North Gate badges"] li')].map((badge) => badge.textContent))
       .toEqual(badges.map((badge) => badge.textContent));
-    expect(mapSensor('South Gate').querySelectorAll('span')).toHaveLength(2);
+    expect(mapSensor('South Gate').querySelectorAll<HTMLElement>('.map-badge')).toHaveLength(2);
     expect(mapSensor('South Gate').textContent).not.toMatch(/PM10:|NO2:/);
   });
 
@@ -543,7 +482,7 @@ describe('Issue #7 observation exploration', () => {
       expect([...legend.querySelectorAll('li')].map((band) => band.textContent)).toEqual([
         `Band 1: < ${first} ${unit}`, `Band 2: ${first}–< ${second} ${unit}`, `Band 3: ≥ ${second} ${unit}`,
       ]);
-      expect(legend.querySelector('li')!.style.backgroundColor).toBe(mapSensor().querySelector('span')!.style.backgroundColor);
+      expect(legend.querySelector('li')!.style.backgroundColor).toBe(mapSensor().querySelector<HTMLElement>('.map-badge')!.style.backgroundColor);
     }
     expect(container.textContent).toContain('Demo visualization bands');
     expect(container.textContent).not.toMatch(/AQI|healthy|unhealthy|safe|hazardous/i);
@@ -554,7 +493,7 @@ describe('Issue #7 observation exploration', () => {
   it('colors the same numeric value according to each Parameter scale', async () => {
     await openObservations({ measurements: rows.map((row) => ({ ...row, value: 25 })) });
     parameterNames.slice(1).forEach(toggle);
-    const badges = [...mapSensor().querySelectorAll('span')];
+    const badges = [...mapSensor().querySelectorAll<HTMLElement>('.map-badge')];
     const legendBandColor = (name: string, band: number) =>
       (container.querySelector(`[aria-label="${name} demo legend"] li:nth-child(${band})`) as HTMLElement).style.backgroundColor;
     expect(badges.map((badge) => badge.style.backgroundColor)).toEqual([
@@ -574,10 +513,10 @@ describe('Issue #7 observation exploration', () => {
       'PM2.5: 12 µg/m³ · SIMULATED', 'PM10: 25 µg/m³ · SIMULATED',
       'NO2: 10 µg/m³ · SIMULATED', 'CO2: 430 ppm · SIMULATED',
     ]);
-    expect(mapSensor().querySelectorAll('span')).toHaveLength(2);
+    expect(mapSensor().querySelectorAll<HTMLElement>('.map-badge')).toHaveLength(2);
     toggle('PM2.5');
     toggle('NO2');
-    expect(mapSensor().querySelectorAll('span')).toHaveLength(0);
+    expect(mapSensor().querySelectorAll<HTMLElement>('.map-badge')).toHaveLength(0);
     expect(popup.querySelectorAll('li')).toHaveLength(4);
     moveTime('1');
     expect(popup.textContent).toContain('08:30');
@@ -599,14 +538,14 @@ describe('Issue #7 observation exploration', () => {
     expect([slider.min, slider.max, slider.step, slider.value]).toEqual(['0', '2', '1', '0']);
     expect(slider.getAttribute('aria-valuetext')).toBe('08:00');
     parameterNames.slice(1).forEach(toggle);
-    const initialColor = mapSensor().querySelector('span')!.style.backgroundColor;
+    const initialColor = mapSensor().querySelector<HTMLElement>('.map-badge')!.style.backgroundColor;
     moveTime('1');
     expect(slider.getAttribute('aria-valuetext')).toBe('08:30');
     expect(container.querySelector('output time')!.getAttribute('datetime')).toBe(times[1]);
     expect(mapSensor().textContent).toContain('PM2.5: 35 µg/m³ · SIMULATED');
     expect(mapSensor().textContent).not.toContain('PM2.5: 12');
-    expect(mapSensor().querySelector('span')!.style.backgroundColor).not.toBe(initialColor);
-    for (const badge of mapSensor().querySelectorAll('span')) {
+    expect(mapSensor().querySelector<HTMLElement>('.map-badge')!.style.backgroundColor).not.toBe(initialColor);
+    for (const badge of mapSensor().querySelectorAll<HTMLElement>('.map-badge')) {
       expect(badge.style.backgroundColor).toBe((container.querySelector('[aria-label="CO2 demo legend"] li:last-child') as HTMLElement).style.backgroundColor);
     }
     expect(mapSensor('South Gate').textContent).not.toContain('PM2.5:');
@@ -645,14 +584,14 @@ describe('Issue #7 observation exploration', () => {
     await openObservations({ measurements: [] });
     expect(container.textContent).toContain('No observations are available for this Simulation Run.');
     expect(container.querySelector('input[type="range"]')).toBeNull();
-    expect(mapSensor().querySelectorAll('span')).toHaveLength(0);
+    expect(mapSensor().querySelectorAll<HTMLElement>('.map-badge')).toHaveLength(0);
   });
 
   it('shows retrieval failure without fake/default observations or further requests', async () => {
     const fetcher = await openObservations({ measurementStatus: 404 });
     expect(container.querySelector('[role="alert"]')!.textContent).toBe('Simulation observations are unavailable.');
     expect(container.querySelector('input[type="range"]')).toBeNull();
-    expect(mapSensor().querySelectorAll('span')).toHaveLength(0);
+    expect(mapSensor().querySelectorAll<HTMLElement>('.map-badge')).toHaveLength(0);
     expect(fetcher).toHaveBeenCalledTimes(5);
   });
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { SiteScene, type Sensor, type SiteBoundary } from '../digital-twin/SiteScene';
+import { SiteScene } from '../digital-twin/SiteScene';
+import type { Sensor, SiteBoundary } from '../digital-twin/geography';
 import { bandColors, formatTime, observationColor, observationText, parameters, type Measurement, type Parameter } from './observations';
 
 const parameterKeys = Object.keys(parameters) as Parameter[];
